@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Miner Game</title>
+    <style>
+        body { text-align: center; overflow: hidden; background-color: #87CEEB; }
+        canvas { background: #654321; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let hookAngle = Math.PI / 2;
+        let hookMovingRight = true;
+        let hookX = canvas.width / 2;
+        let hookY = 50;
+        let hookLength = 50;
+        let isDropping = false;
+        let isRetracting = false;
+        
+        let goldCount = Math.floor(Math.random() * 4) + 5;
+        let golds = Array.from({ length: goldCount }, () => ({
+            x: Math.random() * 700 + 50,
+            y: 250 + (Math.random() * 250),
+            //y: 500,
+            size: 30,
+            caught: false,
+            speed: Math.random() * 2 + 1,
+            direction: Math.random() < 0.5 ? 1 : -1
+        }));
+
+        function drawHook() {
+            ctx.beginPath();
+            let endX = hookX + hookLength * Math.cos(hookAngle);
+            let endY = hookY + hookLength * Math.sin(hookAngle);
+            ctx.moveTo(hookX, hookY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.closePath();
+            ctx.beginPath();
+            ctx.arc(endX, endY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = "black";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawGold() {
+            golds.forEach(gold => {
+                if (!gold.caught) {
+                    ctx.beginPath();
+                    ctx.arc(gold.x, gold.y, gold.size, 0, Math.PI * 2);
+                    ctx.fillStyle = "gold";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+        }
+
+        function updateGold() {
+            golds.forEach(gold => {
+                if (!gold.caught) {
+                    gold.x += gold.speed * gold.direction;
+                    if (gold.x <= 50 || gold.x >= 750) {
+                        gold.direction *= -1;
+                    }
+                }
+            });
+        }
+
+        function updateHook() {
+            if (isDropping) {
+                hookLength += 5;
+                let endX = hookX + hookLength * Math.cos(hookAngle);
+                let endY = hookY + hookLength * Math.sin(hookAngle);
+                
+                golds.forEach(gold => {
+                    let dx = endX - gold.x;
+                    let dy = endY - gold.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < gold.size && !gold.caught) {
+                        gold.caught = true;
+                        isDropping = false;
+                        isRetracting = true;
+                    }
+                });
+                
+                if (hookLength > 500) {
+                    isDropping = false;
+                    isRetracting = true;
+                }
+            } else if (isRetracting) {
+                hookLength -= 5;
+                if (hookLength <= 50) {
+                    isRetracting = false;
+                    golds.forEach(gold => {
+                        if (gold.caught) {
+                            gold.caught = false;
+                            gold.x = Math.random() * 700 + 50;
+                        }
+                    });
+                }
+            }
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawHook();
+            drawGold();
+            updateHook();
+            updateGold();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space" && !isDropping && !isRetracting) {
+                isDropping = true;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
