@@ -22,16 +22,18 @@
         let hookLength = 50;
         let isDropping = false;
         let isRetracting = false;
+        let scoring = 0;
         
         let goldCount = Math.floor(Math.random() * 4) + 5;
         let golds = Array.from({ length: goldCount }, () => ({
             x: Math.random() * 700 + 50,
-            y: 250 + (Math.random() * 250),
+            y: 200 + (Math.random() * 350),
             //y: 500,
             size: 30,
             caught: false,
             speed: Math.random() * 2 + 1,
-            direction: Math.random() < 0.5 ? 1 : -1
+            direction: Math.random() < 0.5 ? 1 : -1,
+            value: 100 
         }));
 
         function drawHook() {
@@ -63,6 +65,16 @@
             });
         }
 
+        function drawScore() {
+            ctx.beginPath();
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = "red";
+            ctx.fillText(scoring, 750,50);
+            ctx.closePath();
+        }
+
         function updateGold() {
             golds.forEach(gold => {
                 if (!gold.caught) {
@@ -88,6 +100,7 @@
                         gold.caught = true;
                         isDropping = false;
                         isRetracting = true;
+                        scoring += gold.value;
                     }
                 });
                 
@@ -115,6 +128,7 @@
             drawGold();
             updateHook();
             updateGold();
+            drawScore();
             requestAnimationFrame(gameLoop);
         }
 
